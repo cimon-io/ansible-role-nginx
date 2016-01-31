@@ -1,0 +1,24 @@
+https: true
+ssl_path: "/etc/nginx/ssl"
+server_params_path: "/etc/nginx/server_params"
+realscheme_path: "/etc/nginx/conf.d/realscheme.conf"
+ssl_certificate_path: "{{ ssl_path }}/cert.crt"
+ssl_certificate_key_path: "{{ ssl_path }}/cert.key"
+
+vhosts:
+  - example.com
+nginx_group: web
+
+static: false # defined set to true if static_path is defined
+static_path: "/var/www/static" # defined dynamically if static is true
+
+applications:
+  - application_name: default1
+    port: 9998
+    location:
+      - '/'
+      - '/images'
+  - application_name: default2
+    port: 9999
+    location:
+      - '~ /blah/*'

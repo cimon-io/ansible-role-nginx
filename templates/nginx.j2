@@ -1,0 +1,70 @@
+{% for application in applications %}
+upstream {{ application.name }} {
+  {% for host in groups[application.nginx_group] %}
+    server {{ hostvars[host]['inventory_hostname'] }}:{{application.port}};
+  {% endfor %}
+}
+{% endfor %}
+
+{% if https %}
+server {
+  listen      [::]:80;
+  listen      *:80;
+  server_name {{ vhosts|join(' ') }};
+  return 301 https://$host$request_uri;
+}
+{% endif %}
+
+server {
+  server_name {{ vhosts|join(' ') }};
+
+  client_max_body_size 4G;
+
+  {% if https %}
+    listen 443 ssl;
+    ssl on;
+    ssl_certificate           {{ ssl_certificate_path }};
+    ssl_certificate_key       {{ ssl_certificate_key_path }};
+    ssl_session_timeout       5m;
+    ssl_protocols             SSLv3 TLSv1;
+    ssl_ciphers               ALL:!aNULL:!ADH:!eNULL:!LOW:!MEDIUM:!EXP:RC4+RSA:+HIGH;
+    ssl_session_cache         shared:SSL:10m;
+    ssl_prefer_server_ciphers on;
+
+    add_header Alternate-Protocol 443:npn-spdy/2;
+  {% else %}
+    listen 80;
+  {% endif %}
+
+  gzip on;
+  gzip_comp_level 5;
+  gzip_types text/plain text/css application/x-javascript text/xml application/xml text/javascript application/javascript;
+
+  keepalive_timeout   70;
+
+  {% if static %}
+  root {{static_path}};
+
+  # location ~* \.(jpg|jpeg|gif|png|bmp|ico|svg|css|js|mp4|ogg|ogv|avi|zip|rar|gz|tgz|tar)$ {
+  #   # expires 1d;
+  #   add_header Cache-Control "private, max-age=86400";
+  # }
+  {% endif %}
+
+  include {{server_params_path}};
+
+  {% for application in applications %}
+    {% for location in application.location %}
+      location {{location}} {
+        try_files $uri @{{application.name}};
+      }
+    {% endfor %}
+  {% endfor %}
+
+  {% for application in applications %}
+    location @{{application.name}} {
+      proxy_pass  http://{{application.name}};
+    }
+  {% endfor %}
+
+}

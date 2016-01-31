@@ -1,0 +1,81 @@
+- name: be sure that static is not needed
+  set_fact:
+    static: true
+  when: static_path is defined
+  tags:
+    - application
+    - nginx
+
+- name: ensure that static directory exists
+  file:
+    path: "{{ static_path }}"
+    state: directory
+  tags:
+    - nginx
+
+- name: realscheme definition
+  template:
+    src: realscheme.j2
+    dest: "{{ realscheme_path }}"
+  notify:
+    - reload nginx
+  tags:
+    - application
+    - nginx
+
+- name: nginx server params file
+  template:
+    src: server_params.j2
+    dest: "{{ server_params_path }}"
+  notify:
+    - reload nginx
+  tags:
+    - application
+    - nginx
+
+- name: nginx configuration
+  template:
+    src: nginx.j2
+    dest: "/etc/nginx/sites-available/loadbalancer.conf"
+  notify:
+    - reload nginx
+  tags:
+    - application
+    - nginx
+
+- name: ssl certificate folder creation
+  file:
+    path: "{{ ssl_path }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0600
+  when: https
+  tags:
+    - application
+    - nginx
+
+- name: ssl certificate
+  copy:
+    src: "{{ item.file }}"
+    dest: "{{ item.dest }}"
+  notify:
+    - restart nginx
+  when: https
+  with_items:
+    - { file: 'files/certs/server.key', dest: "{{ ssl_certificate_key_path }}" }
+    - { file: 'files/certs/server.crt', dest: "{{ ssl_certificate_path }}" }
+  tags:
+    - application
+    - nginx
+
+- name: Link the config
+  file:
+    src: "/etc/nginx/sites-available/loadbalancer.conf"
+    dest: "/etc/nginx/sites-enabled/loadbalancer.conf"
+    state: link
+  notify:
+    - reload nginx
+  tags:
+    - application
+    - nginx
