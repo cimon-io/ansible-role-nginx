@@ -1,4 +1,5 @@
-- name: be sure that static is not needed
+---
+- name: "be sure that static is not needed"
   set_fact:
     static: true
   when: static_path is defined
@@ -6,14 +7,14 @@
     - application
     - nginx
 
-- name: ensure that static directory exists
+- name: "ensure that static directory exists"
   file:
     path: "{{ static_path }}"
     state: directory
   tags:
     - nginx
 
-- name: realscheme definition
+- name: "realscheme definition"
   template:
     src: realscheme.j2
     dest: "{{ realscheme_path }}"
@@ -23,7 +24,7 @@
     - application
     - nginx
 
-- name: nginx server params file
+- name: "nginx server params file"
   template:
     src: server_params.j2
     dest: "{{ server_params_path }}"
@@ -33,17 +34,17 @@
     - application
     - nginx
 
-- name: nginx configuration
+- name: "nginx configuration"
   template:
     src: nginx.j2
-    dest: "/etc/nginx/sites-available/loadbalancer.conf"
+    dest: "/etc/nginx/sites-available/{{ config_name }}.conf"
   notify:
     - reload nginx
   tags:
     - application
     - nginx
 
-- name: ssl certificate folder creation
+- name: "create folder for ssl certificate"
   file:
     path: "{{ ssl_path }}"
     state: directory
@@ -55,27 +56,45 @@
     - application
     - nginx
 
-- name: ssl certificate
+- name: "include letsencrypt"
+  when: https and letsencrypt
+  include: letsencrypt.yml
+  tags:
+    - application
+    - nginx
+
+- name: "copy ssl certificate"
   copy:
     src: "{{ item.file }}"
     dest: "{{ item.dest }}"
   notify:
     - restart nginx
-  when: https
+  when: https and not letsencrypt
   with_items:
-    - { file: 'files/certs/server.key', dest: "{{ ssl_certificate_key_path }}" }
-    - { file: 'files/certs/server.crt', dest: "{{ ssl_certificate_path }}" }
+    - { file: "{{ ssl_key }}", dest: "{{ ssl_certificate_key_path }}" }
+    - { file: "{{ ssl_cert }}", dest: "{{ ssl_certificate_path }}" }
   tags:
     - application
     - nginx
 
-- name: Link the config
+- name: "generate auth file"
+  htpasswd:
+    name: "{{ auth_user }}"
+    password: "{{ auth_pass }}"
+    path: "/etc/nginx/htpasswd"
+  when: basic_auth
+  tags:
+    - application
+    - nginx
+
+- name: "Link the config"
   file:
-    src: "/etc/nginx/sites-available/loadbalancer.conf"
-    dest: "/etc/nginx/sites-enabled/loadbalancer.conf"
+    src: "/etc/nginx/sites-available/{{ config_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ config_name }}.conf"
     state: link
   notify:
     - reload nginx
   tags:
     - application
     - nginx
+

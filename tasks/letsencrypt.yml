@@ -1,0 +1,53 @@
+---
+- name: "install certbot"
+  git:
+    repo: "https://github.com/certbot/certbot.git"
+    dest: /opt/certbot
+    version: "HEAD"
+    force: yes
+  become: yes
+  tags:
+    - application
+    - ssl
+
+- name: "install requirements for certbot"
+  shell: "./certbot-auto -n --os-packages-only"
+  args:
+    chdir: /opt/certbot
+    executable: /bin/bash
+  become: yes
+  tags:
+    - application
+    - ssl
+
+- name: "get ssl"
+  shell: "./certbot-auto certonly -n --standalone --domains {{ vhosts | join(',') }} --email noreply@{{ vhosts[0] }} --agree-tos --expand --keep-until-expiring --allow-subset-of-names --pre-hook 'service nginx stop' --post-hook 'service nginx start' 2>&1"
+  args:
+    chdir: /opt/certbot
+    executable: /bin/bash
+  become: yes
+  tags:
+    - ssl
+
+- name: "link ssl"
+  file:
+    path: "{{ item.to }}"
+    src: "{{ item.from }}"
+    state: link
+  become: yes
+  with_items:
+    - { from: "/etc/letsencrypt/live/{{ vhosts[0] }}/fullchain.pem" , to: "{{ ssl_certificate_path }}" }
+    - { from: "/etc/letsencrypt/live/{{ vhosts[0] }}/privkey.pem" , to: "{{ ssl_certificate_key_path }}" }
+  tags:
+    - ssl
+
+- name: "set autoupdate"
+  cron:
+    name: "update letsencrypt SSL"
+    hour: 1
+    minute: 15
+    weekday: 1
+    job: "/opt/certbot/certbot-auto renew --agree-tos"
+  become: yes
+  tags:
+    - ssl
