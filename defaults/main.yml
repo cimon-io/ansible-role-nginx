@@ -1,36 +1,89 @@
 ---
-https: true
-ssl_path: "/etc/nginx/ssl"
-ssl_cert: 'files/certs/server.crt'
-ssl_key: 'files/certs/server.key'
-ssl_certificate_path: "{{ ssl_path }}/{{ config_name }}.crt"
-ssl_certificate_key_path: "{{ ssl_path }}/{{ config_name }}.key"
+nginx_sites: {}
+nginx_letsencrypt_sites: []
+nginx_auth_basic: {}
 
-letsencrypt: false
+### Basic auth
+# nginx_auth_basic:
+#   authname:
+#     user: "admin"
+#     pass: "admin"
+#
 
-server_params_path: "/etc/nginx/server_params"
-realscheme_path: "/etc/nginx/conf.d/realscheme.conf"
+### Examples:
+### --------
+# nginx_sites:
+#   webserver:
+#     http_listen_port: 80
+#     https_listen_port: 443
+#
+#     http2: false
+#     https: false
+#     ssl_key_file: ""
+#     ssl_cert_file: ""
+#
+#     server_name:
+#       - example.com
+#
+#     root: ""
+#
+#     limit_req_zone: []
+#     limit_conn_zone: []
+#
+#     upstreams: []
+#     locations: []
+#
+#     keepalive_timeout: "65"
+#     client_max_body_size: "1m"
+#
+#     add_header: []
 
-basic_auth: false
-auth_user: "user"
-auth_pass: "youshallnotpass"
+#
+### next level
+#
 
-vhosts:
-  - example.com
-nginx_group: web
+# add_header:
+#  - X-Frame-Options SAMEORIGIN
+#  - X-Content-Type-Options nosniff
+#  - X-XSS-Protection "1; mode=block"
 
-config_name: loadbalancer
+### Limits:
+# limit_req_zone:
+#   - zone: zone1
+#     size: 10m
+#     rate: 30r/s
+#
+# limit_conn_zone:
+#   - zone: zone2
+#     size: 10m
 
-static: false # defined set to true if static_path is defined
-static_path: "/var/www/static" # defined dynamically if static is true
-
-applications:
-  - application_name: default1
-    port: 9998
-    location:
-      - '/'
-      - '/images'
-  - application_name: default2
-    port: 9999
-    location:
-      - '~ /blah/*'
+### Upstream
+# upstreams:
+#   - name: default1
+#     port: 9997
+#     hosts:
+#       - { name: web, nginx_upstream_options: "max_fails=3 fail_timeout=30s" }
+#     location:
+#       - uri: "/"
+#         root: /var/www/html
+#         autoindex: true
+#       - uri: "/images"
+#         limit_conn: { zone: zone2, size: 2 }
+#   - name: default2
+#     port: 9998
+#     location:
+#       - uri: "~ /blah/*"
+#         auth: "authname"
+#   - name: default3
+#     port: 9999
+#     location:
+#       - uri: "= /socket"
+#         options:
+#           - 'proxy_set_header Upgrade $http_upgrade'
+#           - 'proxy_set_header Connection "upgrade"'
+#         limit_req: { zone: zone1, options: "burst=5 nodelay" }
+#
+# locations:
+#   - uri: "/examples"
+#     root: "/var/www/data"
+#     try_files: "$uri $uri/ =404"

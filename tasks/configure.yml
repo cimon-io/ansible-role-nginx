@@ -1,0 +1,36 @@
+---
+- name: "upload nginx config"
+  template:
+    src: "etc/nginx/nginx.conf.j2"
+    dest: "/etc/nginx/nginx.conf"
+  notify:
+    - restart nginx
+
+- name: "upload default site config"
+  template:
+    src: "etc/nginx/sites-available/default.j2"
+    dest: "/etc/nginx/sites-available/default"
+  notify:
+    - restart nginx
+  register: defconfig
+
+- name: "link default config"
+  file:
+    src: "/etc/nginx/sites-available/default"
+    dest: "/etc/nginx/sites-enabled/default"
+    state: link
+  notify:
+    - restart nginx
+
+- name: "generate default ssl"
+  command: "openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -keyout {{ nginx_ssl_default_key_path }} -out {{ nginx_ssl_default_crt_path }} -subj \"/C=AU/ST=Some-State/O=Company/CN=*\""
+  args:
+    creates: "{{ nginx_ssl_default_crt_path }}"
+  notify:
+    - restart nginx
+
+- name: "restart nginx"
+  service:
+    name: nginx
+    state: restarted
+  when: defconfig.changed

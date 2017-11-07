@@ -1,0 +1,146 @@
+# {{ ansible_managed }}
+
+{% for upstream in item.value.upstreams | default([]) %}
+upstream {{ upstream.name }} {
+{% if upstream.group is defined %}
+{% for host in groups[upstream.group] %}
+  server {{ hostvars[host]['inventory_hostname'] }}{% if upstream.port is defined %}:{{upstream.port}}{% endif %} {% if hostvars[host]['nginx_upstream_options'] is defined %}{{ hostvars[host]['nginx_upstream_options'] }}{% endif %};
+{% endfor %}
+{% endif %}
+{% if upstream.hosts is defined %}
+{% for host in upstream.hosts %}
+{% if host.name is defined %}
+  server {{ host.name }}{% if upstream.port is defined %}:{{upstream.port}}{% endif %} {% if host.nginx_upstream_options is defined %}{{ host.nginx_upstream_options }}{% endif %};
+{% endif %}
+{% endfor %}
+{% endif %}
+}
+
+{% endfor -%}
+{% if item.value.limit_req_zone | default({}) %}
+{% for limit in item.value.limit_req_zone %}
+limit_req_zone $binary_remote_addr zone={{ limit.zone }}:{{ limit.size }} rate={{ limit.rate }};
+{% endfor %}
+{% endif %}
+{% if item.value.limit_conn_zone | default({}) %}
+{% for limit in item.value.limit_conn_zone %}
+limit_conn_zone $binary_remote_addr zone={{ limit.zone }}:{{ limit.size }};
+{% endfor %}
+{% endif %}
+
+{% if item.value.https | default(False) %}
+server {
+  listen [::]:{{ item.value.http_listen_port | default(80) }};
+  listen *:{{ item.value.http_listen_port | default(80) }};
+  server_name {{ item.value.server_name | join(' ') }};
+  return 301 https://$host$request_uri;
+}
+{% endif -%}
+
+server {
+  server_name {{ item.value.server_name | join(' ') }};
+
+  client_max_body_size {{ item.value.client_max_body_size | default("1m") }};
+
+{% if item.value.https | default(False) %}
+  listen {{ item.value.https_listen_port | default(443) }} ssl {% if item.value.http2|default(False) %}http2{% endif %};
+  listen [::]:{{ item.value.https_listen_port | default(443) }} ssl {% if item.value.http2|default(False) %}http2{% endif %};
+
+  ssl_certificate {{ nginx_ssl_path }}/{{ item.key }}.crt;
+  ssl_certificate_key {{ nginx_ssl_path }}/{{ item.key }}.key;
+
+  ssl_session_timeout {{ nginx_ssl_session_timeout }};
+  ssl_session_cache {{ nginx_ssl_session_cache }};
+  ssl_session_tickets {{ nginx_ssl_session_tickets }};
+
+  ssl_protocols {{ nginx_ssl_protocols }};
+  ssl_ciphers {{ nginx_ssl_ciphers }};
+  ssl_prefer_server_ciphers {{ nginx_ssl_prefer_server_ciphers }};
+{% else %}
+  listen {{ item.value.http_listen_port | default(80) }};
+{% endif %}
+
+{% for header in item.value.add_header | default([]) %}
+  add_header {{ header }};
+{% endfor %}
+  keepalive_timeout {{ item.value.keepalive_timeout | default(nginx_keepalive_timeout) }};
+
+{% if item.value.root | default(False) %}
+  root {{ item.value.root }};
+{% endif %}
+
+  include /etc/nginx/server_params;
+
+{% if item.key in nginx_letsencrypt_sites %}
+  location /.well-known {
+    root /var/www/_letsencrypt;
+    try_files $uri $uri/ =404;
+  }
+{% endif %}
+
+{% for location in item.value.locations | default([]) %}
+  location {{ location.uri }} {
+{% if location.auth | default(False) %}
+    auth_basic "Basic auth";
+    auth_basic_user_file /etc/nginx/{{ location.auth }}.htpasswd;
+{% endif %}
+{% if location.autoindex | default(False) %}
+    autoindex on;
+    autoindex_exact_size off;
+{% endif %}
+{% if location.limit_req | default({}) %}
+    limit_req zone={{ location.limit_req.zone }} {{ location.limit_req.options }};
+{% endif %}
+{% if location.limit_conn | default({}) %}
+    limit_conn {{ location.limit_conn.zone }} {{ location.limit_conn.size }};
+{% endif %}
+{% if location.root | default(False) %}
+    root {{ location.root }};
+{% endif %}
+{% if location.options | default([]) %}
+{% for opts in location.options %}
+    {{ opts }};
+{% endfor %}
+{% endif %}
+    try_files {{ location.try_files | default('$uri $uri/ =404')}};
+  }
+
+{% endfor -%}
+
+{% for upstream in item.value.upstreams | default([]) %}
+{% for location in upstream.location %}
+  location {{ location.uri }} {
+{% if location.auth | default(False) %}
+    auth_basic "Basic auth";
+    auth_basic_user_file /etc/nginx/{{ location.auth }}.htpasswd;
+{% endif %}
+{% if location.autoindex | default(False) %}
+    autoindex on;
+    autoindex_exact_size off;
+{% endif %}
+{% if location.limit_req | default({}) %}
+    limit_req zone={{ location.limit_req.zone }} {{ location.limit_req.options }};
+{% endif %}
+{% if location.limit_conn | default({})%}
+    limit_conn {{ location.limit_conn.zone }} {{ location.limit_conn.size }};
+{% endif %}
+{% if location.root | default(False) %}
+    root {{ location.root }};
+{% endif %}
+{% if location.options | default([]) %}
+{% for opts in location.options %}
+    {{ opts }};
+{% endfor %}
+{% endif %}
+    try_files {{ location.try_files | default('$uri @'+upstream.name) }};
+  }
+
+{% endfor %}
+{% endfor -%}
+{% for upstream in item.value.upstreams | default([]) %}
+  location @{{ upstream.name }} {
+    proxy_pass http://{{ upstream.name }};
+  }
+
+{% endfor -%}
+}

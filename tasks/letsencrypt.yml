@@ -1,53 +1,36 @@
 ---
-- name: "install certbot"
-  git:
-    repo: "https://github.com/certbot/certbot.git"
-    dest: /opt/certbot
-    version: "HEAD"
-    force: yes
-  become: yes
-  tags:
-    - application
-    - ssl
-
-- name: "install requirements for certbot"
-  shell: "./certbot-auto -n --os-packages-only"
-  args:
-    chdir: /opt/certbot
-    executable: /bin/bash
-  become: yes
-  tags:
-    - application
-    - ssl
+# Generate Let's Encrypt SSL
+- name: "create letsencrypt directory"
+  file:
+    name: /var/www/_letsencrypt
+    state: directory
 
 - name: "get ssl"
-  shell: "./certbot-auto certonly -n --standalone --domains {{ vhosts | join(',') }} --email noreply@{{ vhosts[0] }} --agree-tos --expand --keep-until-expiring --allow-subset-of-names --pre-hook 'service nginx stop' --post-hook 'service nginx start' 2>&1"
+  shell: "./certbot-auto certonly -n --webroot -w /var/www/_letsencrypt --domains {{ nginx_sites[item].server_name | join(',') }} --email admin@{{ nginx_sites[item].server_name[0] }} --agree-tos --expand --keep-until-expiring --allow-subset-of-names --cert-name {{ item }} --post-hook 'nginx -s reload' 2>&1"
   args:
     chdir: /opt/certbot
     executable: /bin/bash
-  become: yes
-  tags:
-    - ssl
+  with_items: "{{ nginx_letsencrypt_sites }}"
 
-- name: "link ssl"
+- name: "link ssl cert"
   file:
-    path: "{{ item.to }}"
-    src: "{{ item.from }}"
+    path: "{{ nginx_ssl_path }}/{{ item }}.crt"
+    src: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
     state: link
-  become: yes
-  with_items:
-    - { from: "/etc/letsencrypt/live/{{ vhosts[0] }}/fullchain.pem" , to: "{{ ssl_certificate_path }}" }
-    - { from: "/etc/letsencrypt/live/{{ vhosts[0] }}/privkey.pem" , to: "{{ ssl_certificate_key_path }}" }
-  tags:
-    - ssl
+  with_items: "{{ nginx_letsencrypt_sites }}"
 
-- name: "set autoupdate"
+- name: "link ssl key"
+  file:
+    path: "{{ nginx_ssl_path }}/{{ item }}.key"
+    src: "/etc/letsencrypt/live/{{ item }}/privkey.pem"
+    state: link
+  with_items: "{{ nginx_letsencrypt_sites }}"
+
+- name: "set crontask - ssl renewal"
   cron:
     name: "update letsencrypt SSL"
-    hour: 1
+    hour: 5
     minute: 15
     weekday: 1
     job: "/opt/certbot/certbot-auto renew --agree-tos"
-  become: yes
-  tags:
-    - ssl
+  when: nginx_letsencrypt_sites

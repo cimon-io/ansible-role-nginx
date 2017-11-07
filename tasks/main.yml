@@ -1,100 +1,30 @@
 ---
-- name: "be sure that static is not needed"
-  set_fact:
-    static: true
-  when: static_path is defined
-  tags:
-    - application
-    - nginx
-
-- name: "ensure that static directory exists"
-  file:
-    path: "{{ static_path }}"
-    state: directory
-  tags:
-    - nginx
-
-- name: "realscheme definition"
-  template:
-    src: realscheme.j2
-    dest: "{{ realscheme_path }}"
-  notify:
-    - reload nginx
-  tags:
-    - application
-    - nginx
-
-- name: "nginx server params file"
-  template:
-    src: server_params.j2
-    dest: "{{ server_params_path }}"
-  notify:
-    - reload nginx
-  tags:
-    - application
-    - nginx
-
-- name: "nginx configuration"
-  template:
-    src: nginx.j2
-    dest: "/etc/nginx/sites-available/{{ config_name }}.conf"
-  notify:
-    - reload nginx
-  tags:
-    - application
-    - nginx
-
-- name: "create folder for ssl certificate"
-  file:
-    path: "{{ ssl_path }}"
-    state: directory
-    owner: "root"
-    group: "root"
-    mode: 0600
-  when: https
-  tags:
-    - application
-    - nginx
-
-- name: "include letsencrypt"
-  when: https and letsencrypt
-  include: letsencrypt.yml
-  tags:
-    - application
-    - nginx
-
-- name: "copy ssl certificate"
-  copy:
-    src: "{{ item.file }}"
-    dest: "{{ item.dest }}"
-  notify:
-    - restart nginx
-  when: https and not letsencrypt
+- name: "include config files"
+  include_vars: "{{ item }}"
   with_items:
-    - { file: "{{ ssl_key }}", dest: "{{ ssl_certificate_key_path }}" }
-    - { file: "{{ ssl_cert }}", dest: "{{ ssl_certificate_path }}" }
-  tags:
-    - application
-    - nginx
+    - ssl.yml
+    - configure.yml
+    - install.yml
+  tags: [nginx, nginx-apt, nginx-config]
 
-- name: "generate auth file"
-  htpasswd:
-    name: "{{ auth_user }}"
-    password: "{{ auth_pass }}"
-    path: "/etc/nginx/htpasswd"
-  when: basic_auth
-  tags:
-    - application
-    - nginx
+- name: "install nginx"
+  include: install.yml
+  tags: [nginx, nginx-apt]
 
-- name: "Link the config"
-  file:
-    src: "/etc/nginx/sites-available/{{ config_name }}.conf"
-    dest: "/etc/nginx/sites-enabled/{{ config_name }}.conf"
-    state: link
-  notify:
-    - reload nginx
-  tags:
-    - application
-    - nginx
+- name: "configure nginx"
+  include: configure.yml
+  tags: [nginx, nginx-config]
 
+- name: "site ssl configuration"
+  include: ssl.yml
+  tags: [nginx, nginx-config, nginx-site, nginx-ssl]
+
+- name: "letsencrypt ssl configuration"
+  include: letsencrypt.yml
+  tags: [nginx, nginx-config, nginx-site, nginx-ssl]
+
+- name: "configure nginx sites"
+  include: configure_site.yml
+  tags: [nginx, nginx-config, nginx-site]
+
+- meta: flush_handlers

@@ -1,0 +1,39 @@
+---
+- name: "install software required for nginx"
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_valid_time }}"
+  with_items: "{{ nginx_requirements }}"
+
+- name: "add nginx repository"
+  apt_repository:
+    repo: "{{ nginx_repo }}"
+
+- name: "pin nginx-extras package"
+  template:
+    src: "etc/apt/preferences.d/nginx-extras.pref.j2"
+    dest: "/etc/apt/preferences.d/nginx-extras.pref"
+    owner: root
+
+- name: "install nginx"
+  apt:
+    name: nginx-extras
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_valid_time }}"
+
+- name: "install certbot"
+  git:
+    repo: "https://github.com/certbot/certbot.git"
+    dest: /opt/certbot
+    version: "{{ nginx_certbot_version }}"
+  when: nginx_letsencrypt_sites
+
+- name: "install requirements for certbot"
+  shell: "./certbot-auto -n --os-packages-only"
+  args:
+    chdir: /opt/certbot
+    executable: /bin/bash
+  when: nginx_letsencrypt_sites

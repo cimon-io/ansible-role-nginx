@@ -1,0 +1,75 @@
+---
+nginx_auth_basic:
+  adminpanel:
+    user: admin
+    pass: admin
+
+nginx_sites:
+  load-balancer:
+    limit_req_zone:
+      - { zone: zone1, size: 10m, rate: 30r/s }
+    limit_conn_zone:
+      - { zone: zone2, size: 10m }
+    add_header:
+      - 'X-Frame-Options SAMEORIGIN'
+      - 'X-Content-Type-Options nosniff'
+      - 'X-XSS-Protection "1; mode=block"'
+    upstreams:
+      - name: stats
+        port: 80
+        hosts:
+          - { name: "{{ hostvars['stat-service'].inventory_hostname }}" }
+        location:
+          - uri: '/stats'
+            options:
+              - 'proxy_set_header Upgrade $http_upgrade'
+              - 'proxy_set_header Connection "upgrade"'
+            limit_req: { zone: zone1, options: "burst=5" }
+      - name: landing
+        port: 80
+        hosts:
+          - { name: "{{ hostvars['landing'].inventory_hostname }}" }
+        location:
+          - uri: '= /'
+      - name: backend
+        port: 80
+        group: "backend-servers"
+        location:
+          - uri: "/"
+            limit_conn: { zone: zone2, size: 5 }
+    server_name:
+      - example.com
+  landing:
+    root: "/var/www/landing"
+    server_name:
+      - landing.example.com
+  stat:
+    root: "/var/www/stat"
+    upstreams:
+      - name: ws_rails
+        port: 3000
+        hosts:
+          - { name: "127.0.0.1" }
+        location:
+          - uri: "/"
+            options:
+              - 'proxy_set_header Upgrade $http_upgrade'
+              - 'proxy_set_header Connection "upgrade"'
+    server_name:
+      - stat.example.com
+  backend:
+    upstreams:
+      - name: rails
+        port: 3000
+        hosts:
+          - { name: "127.0.0.1" }
+        location:
+          - uri: "/"
+          - uri: "/admin"
+            auth: "adminpanel"
+    locations:
+      - uri: "/data"
+        autoindex: true
+        root: "/var/www/data"
+    server_name:
+      - backend.example.com

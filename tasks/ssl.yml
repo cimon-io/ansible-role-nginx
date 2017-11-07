@@ -1,0 +1,29 @@
+---
+- name: "create folder for ssl certificate"
+  file:
+    path: "{{ nginx_ssl_path }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0600
+
+# Upload SSL
+- name: "copy ssl certificate"
+  copy:
+    src: "{{ item.value.ssl_cert_file }}"
+    dest: "{{ nginx_ssl_path }}/{{ item.key }}.crt"
+  notify:
+    - restart nginx
+  when: (item.value.https | default(False)) and
+        (item.key not in nginx_letsencrypt_sites)
+  with_dict: "{{ nginx_sites }}"
+
+- name: "copy ssl private key"
+  copy:
+    src: "{{ item.ssl_key_file }}"
+    dest: "{{ nginx_ssl_path }}/{{ name }}.key"
+  notify:
+    - restart nginx
+  when: (item.value.https |  default(False)) and
+        (item.key not in nginx_letsencrypt_sites)
+  with_dict: "{{ nginx_sites }}"

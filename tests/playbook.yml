@@ -1,0 +1,7 @@
+---
+- hosts: cimon-ansible
+  roles:
+    - role: hosts-configure
+    - role: nginx
+  vars_files:
+    - ./vars.yml

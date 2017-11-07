@@ -1,0 +1,41 @@
+---
+- name: "ensure that nginx root directory exists"
+  file:
+    path: "{{ item.value.root }}"
+    state: directory
+  when: item.value.root is defined
+  with_dict: "{{ nginx_sites }}"
+
+- name: "realscheme definition"
+  template:
+    src: "etc/nginx/conf.d/realscheme.conf.j2"
+    dest: "/etc/nginx/conf.d/realscheme.conf"
+
+- name: "nginx server params file"
+  template:
+    src: "etc/nginx/server_params.j2"
+    dest: "/etc/nginx/server_params"
+
+- name: "site configuration"
+  template:
+    src: "etc/nginx/sites-available/site.conf.j2"
+    dest: "/etc/nginx/sites-available/{{ item.key }}.conf"
+  notify:
+    - reload nginx
+  with_dict: "{{ nginx_sites }}"
+
+- name: "generate auth file"
+  htpasswd:
+    name: "{{ item.value.user }}"
+    password: "{{ item.value.pass }}"
+    path: "/etc/nginx/{{ item.key }}.htpasswd"
+  with_dict: "{{ nginx_auth_basic }}"
+
+- name: "link the config"
+  file:
+    src: "/etc/nginx/sites-available/{{ item.key }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ item.key }}.conf"
+    state: link
+  notify:
+    - reload nginx
+  with_dict: "{{ nginx_sites }}"
