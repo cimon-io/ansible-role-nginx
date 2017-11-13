@@ -18,7 +18,7 @@ nginx_sites:
       - name: stats
         port: 80
         hosts:
-          - { name: "{{ hostvars['stat-service'].inventory_hostname }}" }
+          - { name: "127.0.0.2" }
         location:
           - uri: '/stats'
             options:
@@ -28,12 +28,13 @@ nginx_sites:
       - name: landing
         port: 80
         hosts:
-          - { name: "{{ hostvars['landing'].inventory_hostname }}" }
+          - { name: "127.0.0.3" }
         location:
           - uri: '= /'
       - name: backend
         port: 80
-        group: "backend-servers"
+        hosts:
+          - { name: "127.0.0.4" }
         location:
           - uri: "/"
             limit_conn: { zone: zone2, size: 5 }
@@ -49,7 +50,7 @@ nginx_sites:
       - name: ws_rails
         port: 3000
         hosts:
-          - { name: "127.0.0.1" }
+          - { name: "127.0.0.5" }
         location:
           - uri: "/"
             options:
@@ -62,7 +63,7 @@ nginx_sites:
       - name: rails
         port: 3000
         hosts:
-          - { name: "127.0.0.1" }
+          - { name: "127.0.0.6" }
         location:
           - uri: "/"
           - uri: "/admin"
