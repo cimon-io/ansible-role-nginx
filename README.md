@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cimon-io/ansible-role-nginx.svg?branch=master)](https://travis-ci.org/cimon-io/ansible-role-nginx)
+
 # Ansible Role NGINX
 
 An ansible role that installs and configures the __NGINX__ web server. It also allows you to specify SSL settings and configure any number of sites.
