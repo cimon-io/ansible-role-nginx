@@ -1,0 +1,27 @@
+---
+language: python
+python: "2.7"
+
+sudo: required
+
+addons:
+  apt:
+    packages:
+    - python-pip
+
+install:
+  - pip install ansible
+  - ansible --version
+
+script:
+  - echo -e '[cimon-ansible]\nlocalhost ansible_connection=local' > inventory
+  - ansible-playbook tests/playbook.yml -i inventory --syntax-check
+  - ansible-playbook tests/playbook.yml -i inventory
+  - >
+    ansible-playbook tests/playbook.yml -i inventory 
+    | grep -q 'changed=0.*failed=0' 
+    && (echo 'Idempotence test: pass' && exit 0) 
+    || (echo 'Idempotence test: fail' && exit 1)
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/
