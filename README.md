@@ -206,7 +206,7 @@ add_header: []
 
 ### Installation
 
-You are able to specify an NGINX version and other related parameters in `vars/install.yml`. Use `nginx_requirements` to install a list of desired packages. The required ones are already added.
+Use `nginx_requirements` to install a list of desired packages. The required ones are already added.
 
 ```yaml
 nginx_requirements:
@@ -254,7 +254,7 @@ apt_cache_valid_time: 86400  # Update the apt cache if it is older than 1 day
 
 ### NGINX configuration
 
-Use configuration variables for more NGINX options (see `vars/configure.yml`). The variable `nginx_user` defines user credentials used by worker processes.
+The variable `nginx_user` defines user credentials used by worker processes.
 
 ```yaml
 nginx_user: "www-data"            # A user for whom NGINX is installed
@@ -317,10 +317,10 @@ The variable `nginx_log_format` specifies log format using the following syntax:
 ```yaml
 nginx_log_format: {}
 # A log format includes parameters:
-name: combined
+  name: combined
 # Default log format
-string: '$remote_addr - $remote_user [$time_local] "$request" $status
-        $body_bytes_sent "$http_referer""$http_user_agent"'  
+  string: '$remote_addr - $remote_user [$time_local] "$request" $status
+          $body_bytes_sent "$http_referer""$http_user_agent"'
 ```
 
 The log format can contain common variables, and variables that exist only at the time of a log write:
@@ -343,7 +343,7 @@ The log format can contain common variables, and variables that exist only at th
 
 ### SSL settings
 
-The role allows to configure SSL usage for your NGINX server (see `vars/ssl.yml`). The variable `nginx_ssl_session_timeout` specifies a time during which a client can reuse the session parameters.
+The variable `nginx_ssl_session_timeout` specifies a time during which a client can reuse the session parameters.
 
 ```yaml
 nginx_ssl_session_timeout: "1d"  # Use session parameters during 1 day

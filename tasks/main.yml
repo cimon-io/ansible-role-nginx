@@ -1,12 +1,4 @@
 ---
-- name: "include config files"
-  include_vars: "{{ item }}"
-  with_items:
-    - ssl.yml
-    - configure.yml
-    - install.yml
-  tags: [nginx, nginx-apt, nginx-config]
-
 - name: "install nginx"
   include: install.yml
   tags: [nginx, nginx-apt]
