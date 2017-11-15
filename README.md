@@ -429,10 +429,10 @@ nginx_sites:
           - { name: "{{ hostvars['stat-service'].inventory_hostname }}" }
         location:
           - uri: '/stats'
-            options:
-              - 'proxy_set_header Upgrade $http_upgrade'
-              - 'proxy_set_header Connection "upgrade"'
             limit_req: { zone: zone1, options: "burst=5" }
+        proxy_options:
+          - 'proxy_set_header Upgrade $http_upgrade'
+          - 'proxy_set_header Connection "upgrade"'
       - name: landing
         port: 80
         hosts:
@@ -472,9 +472,9 @@ nginx_sites:
           - { name: "127.0.0.1" }
         location:
           - uri: "/"
-            options:
-              - 'proxy_set_header Upgrade $http_upgrade'
-              - 'proxy_set_header Connection "upgrade"'
+        proxy_options:
+          - 'proxy_set_header Upgrade $http_upgrade'
+          - 'proxy_set_header Connection "upgrade"'
     server_name:
       - stat.example.com
 ```
