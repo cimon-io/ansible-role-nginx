@@ -140,6 +140,11 @@ server {
 {% for upstream in item.value.upstreams | default([]) %}
   location @{{ upstream.name }} {
     proxy_pass http://{{ upstream.name }};
+{% if upstream.proxy_options | default([]) %}
+{% for opts in upstream.proxy_options %}
+    {{ opts }};
+{% endfor %}
+{% endif %}
   }
 
 {% endfor -%}
