@@ -20,8 +20,8 @@
 
 - name: "copy ssl private key"
   copy:
-    src: "{{ item.ssl_key_file }}"
-    dest: "{{ nginx_ssl_path }}/{{ name }}.key"
+    src: "{{ item.value.ssl_key_file }}"
+    dest: "{{ nginx_ssl_path }}/{{ item.key }}.key"
   notify:
     - restart nginx
   when: (item.value.https |  default(False)) and
