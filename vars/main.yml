@@ -1,3 +1,12 @@
 ---
 ansible_become: yes
 
+nginx_requirements:
+  - python-pycurl
+  - python-passlib
+  - openssl
+
+nginx_repo: "ppa:nginx/stable"
+nginx_apt_pin_priority: 550
+
+apt_cache_valid_time: 86400
