@@ -101,15 +101,16 @@ The parameter `upstreams` is used to define sets of servers. If you are configur
 upstreams: []
 ```
 
-For each [upstream](https://nginx.org/en/docs/http/ngx_http_upstream_module.html) group you are able to specify a `name`, a `port`, a list of servers (particular names `hosts` or/and some group names `group`) and their parameters, `location` values.
+For each [upstream](https://nginx.org/en/docs/http/ngx_http_upstream_module.html) group you are able to specify a `name`, a `port`, a list of servers (particular names `hosts` or/and some group names `group`) and their parameters, `location` values and `proxy_options`.
 
 ```yaml
 upstreams:
-  - name:         # An upstream name
-    port:         # Which port to listen to
-    hosts: []     # Particular host parameters
-    group:        # Group of hosts
-    location: []  # Location parameters
+  - name:             # An upstream name
+    port:             # Which port to listen to
+    hosts: []         # Particular host parameters
+    group:            # Group of hosts
+    location: []      # Location parameters
+    proxy_options: [] # Additional upstream options
 ```
 
 For each `hosts` item you can define its `name` and a string variable `nginx_upstream_options` which includes:
@@ -143,6 +144,14 @@ location:
     root: /var/www/html
   - uri: "/images"
     limit_conn: { zone: zone2, size: 2 }
+```
+
+The next upstream parameter `proxy_options` allows to add a list of necessary options to `location @upstream`:
+
+```yaml
+proxy_options:
+  - 'proxy_set_header Upgrade $http_upgrade'
+  - 'proxy_set_header Connection "upgrade"'
 ```
 
 Some upstream examples are given below along with available options.
@@ -429,10 +438,10 @@ nginx_sites:
           - { name: "{{ hostvars['stat-service'].inventory_hostname }}" }
         location:
           - uri: '/stats'
-            options:
-              - 'proxy_set_header Upgrade $http_upgrade'
-              - 'proxy_set_header Connection "upgrade"'
             limit_req: { zone: zone1, options: "burst=5" }
+        proxy_options:
+          - 'proxy_set_header Upgrade $http_upgrade'
+          - 'proxy_set_header Connection "upgrade"'
       - name: landing
         port: 80
         hosts:
@@ -472,9 +481,9 @@ nginx_sites:
           - { name: "127.0.0.1" }
         location:
           - uri: "/"
-            options:
-              - 'proxy_set_header Upgrade $http_upgrade'
-              - 'proxy_set_header Connection "upgrade"'
+        proxy_options:
+          - 'proxy_set_header Upgrade $http_upgrade'
+          - 'proxy_set_header Connection "upgrade"'
     server_name:
       - stat.example.com
 ```
