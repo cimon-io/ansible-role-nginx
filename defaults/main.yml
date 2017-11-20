@@ -38,4 +38,3 @@ nginx_ssl_path: "/etc/nginx/ssl"
 
 nginx_ssl_default_key_path: "/etc/ssl/private/selfsigned-default.key"
 nginx_ssl_default_crt_path: "/etc/ssl/certs/selfsigned-default.crt"
-

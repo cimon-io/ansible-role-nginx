@@ -6,7 +6,8 @@ nginx_requirements:
   - python-passlib
   - openssl
 
-nginx_repo: "ppa:nginx/stable"
+nginx_key: "https://nginx.org/keys/nginx_signing.key"
+nginx_repo: "deb http://nginx.org/packages/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} nginx"
 nginx_apt_pin_priority: 550
 
 apt_cache_valid_time: 86400
