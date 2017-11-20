@@ -7,22 +7,38 @@
     cache_valid_time: "{{ apt_cache_valid_time }}"
   with_items: "{{ nginx_requirements }}"
 
+- name: "add nginx repo key"
+  apt_key:
+    url: "{{ nginx_key }}"
+
 - name: "add nginx repository"
   apt_repository:
     repo: "{{ nginx_repo }}"
+    filename: "nginx"
 
-- name: "pin nginx-extras package"
+- name: "pin nginx repository"
   template:
-    src: "etc/apt/preferences.d/nginx-extras.pref.j2"
-    dest: "/etc/apt/preferences.d/nginx-extras.pref"
+    src: "etc/apt/preferences.d/nginx.pref.j2"
+    dest: "/etc/apt/preferences.d/nginx.pref"
     owner: root
 
 - name: "install nginx"
   apt:
-    name: nginx-extras
+    name: "nginx={{ nginx_version }}*"
     state: present
     update_cache: true
     cache_valid_time: "{{ apt_cache_valid_time }}"
+
+- name: "create sites directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "/etc/nginx/sites-available"
+    - "/etc/nginx/sites-enabled"
 
 - name: "install certbot"
   git:
