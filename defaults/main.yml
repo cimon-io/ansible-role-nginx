@@ -21,7 +21,6 @@ nginx_server_names_hash_bucket_size: "64"
 
 nginx_gzip: "on"
 nginx_gzip_comp_level: "6"
-nginx_gzip_types: "text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript"
 nginx_gzip_types: "text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript application/atom+xml  application/x-font-ttf application/xhtml+xml font/opentype image/svg+xml image/x-icon text/x-component"
 nginx_log_format: {}
 
