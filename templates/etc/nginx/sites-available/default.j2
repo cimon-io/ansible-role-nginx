@@ -4,12 +4,29 @@ server {
   listen      80 default_server;
   listen      [::]:80 default_server;
 
-  return 302 https://$host$request_uri;
+  server_name _;
+
+  location /nginx_status {
+    stub_status;
+    allow 127.0.0.1;
+    deny all;
+  }
+
+  location /.well-known {
+    root /var/www/_letsencrypt;
+    try_files $uri $uri/ =404;
+  }
+
+  location / {
+    return 403;
+  }
 }
 
 server {
   listen      443 ssl default_server;
   listen      [::]:443 ssl default_server;
+
+  server_name _;
 
   ssl_certificate {{ nginx_ssl_default_crt_path }};
   ssl_certificate_key {{ nginx_ssl_default_key_path }};
@@ -21,7 +38,7 @@ server {
   ssl_protocols {{ nginx_ssl_protocols }};
   ssl_ciphers {{ nginx_ssl_ciphers }};
 
-  location /__nginx_status {
+  location /nginx_status {
     stub_status;
     allow 127.0.0.1;
     deny all;
