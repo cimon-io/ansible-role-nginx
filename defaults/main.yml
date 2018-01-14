@@ -24,6 +24,8 @@ nginx_gzip_types: "text/plain text/css application/json application/javascript t
 nginx_log_format: {}
 
 # NGINX SSL config
+nginx_wellknown_path: "/var/www/_letsencrypt"
+
 nginx_ssl_session_timeout: "1d"
 nginx_ssl_session_cache: "shared:SSL:50m"
 nginx_ssl_session_tickets: "off"
