@@ -44,7 +44,7 @@
   git:
     repo: "https://github.com/certbot/certbot.git"
     dest: /opt/certbot
-    version: "{{ nginx_certbot_version }}"
+    update: no
   when: nginx_letsencrypt_sites
 
 - name: "install requirements for certbot"
