@@ -1,22 +1,22 @@
 ---
 - name: "install nginx"
-  include: install.yml
+  import_tasks: install.yml
   tags: [nginx, nginx-apt]
 
 - name: "configure nginx"
-  include: configure.yml
+  import_tasks: configure.yml
   tags: [nginx, nginx-config]
 
 - name: "site ssl configuration"
-  include: ssl.yml
+  import_tasks: ssl.yml
   tags: [nginx, nginx-config, nginx-site, nginx-ssl]
 
 - name: "letsencrypt ssl configuration"
-  include: letsencrypt.yml
+  import_tasks: letsencrypt.yml
   tags: [nginx, nginx-config, nginx-site, nginx-ssl]
 
 - name: "configure nginx sites"
-  include: configure_site.yml
+  import_tasks: configure_site.yml
   tags: [nginx, nginx-config, nginx-site]
 
 - meta: flush_handlers
