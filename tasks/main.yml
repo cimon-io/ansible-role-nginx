@@ -9,14 +9,14 @@
 
 - name: "site ssl configuration"
   import_tasks: ssl.yml
-  tags: [nginx, nginx-config, nginx-site, nginx-ssl]
+  tags: [nginx, nginx-config, nginx-ssl]
 
 - name: "letsencrypt ssl configuration"
   import_tasks: letsencrypt.yml
-  tags: [nginx, nginx-config, nginx-site, nginx-ssl]
+  tags: [nginx, nginx-config, nginx-ssl]
 
 - name: "configure nginx sites"
   import_tasks: configure_site.yml
-  tags: [nginx, nginx-config, nginx-site]
+  tags: [nginx, nginx-config, nginx-site-config]
 
 - meta: flush_handlers
