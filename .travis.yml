@@ -4,17 +4,13 @@ python: "2.7"
 
 sudo: required
 
-addons:
-  apt:
-    packages:
-    - python-pip
-
 install:
-  - pip install ansible
+  - pip install ansible apt
   - ansible --version
 
 script:
-  - echo -e '[cimon-ansible]\nlocalhost ansible_connection=local' > inventory
+  - echo -ne '[cimon-ansible]\nlocalhost ansible_connection=local ansible_python_interpreter=' > inventory
+  - which python >> inventory
   - ansible-playbook tests/playbook.yml -i inventory --syntax-check
   - ansible-playbook tests/playbook.yml -i inventory
   - >
