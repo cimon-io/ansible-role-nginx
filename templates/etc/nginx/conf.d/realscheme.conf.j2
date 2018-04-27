@@ -4,3 +4,8 @@ map $http_x_forwarded_proto $realscheme {
      default $http_x_forwarded_proto;
      ''      $scheme;
 }
+
+map $http_x_forwarded_port $real_port {
+     default $http_x_forwarded_port;
+     ''      $server_port;
+}
