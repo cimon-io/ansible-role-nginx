@@ -1,11 +1,21 @@
 # {{ ansible_managed }}
 
-map $http_x_forwarded_proto $realscheme {
-     default $http_x_forwarded_proto;
-     ''      $scheme;
+map $http_x_forwarded_proto $real_scheme {
+    default $http_x_forwarded_proto;
+    ''      $scheme;
 }
 
 map $http_x_forwarded_port $real_port {
-     default $http_x_forwarded_port;
-     ''      $server_port;
+    default $http_x_forwarded_port;
+    ''      $server_port;
+}
+
+map $http_x_real_ip $real_ip {
+    default $http_x_real_ip;
+    ''      $remote_addr;
+}
+
+map $http_upgrade $connection_upgrade {
+    default Upgrade;
+    ''      Close;
 }
