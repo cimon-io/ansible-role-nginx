@@ -1,9 +1,11 @@
 ---
+nginx_version: "1.14"
+
 nginx_sites: {}
 nginx_letsencrypt_sites: []
 nginx_auth_basic: {}
-
-nginx_version: "1.14"
+nginx_error_pages: ""
+#nginx_error_pages: "files/nginx/error_pages/*.html"
 
 # NGINX web-server config / nginx.conf
 nginx_user: "www-data"

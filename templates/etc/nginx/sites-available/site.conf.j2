@@ -145,4 +145,13 @@ server {
   }
 
 {% endfor -%}
+
+{% for err in item.value.error_pages | default([]) %}
+error_page {{ err }} /custom_{{ err }}.html;
+location = /custom_{{ err }}.html {
+  root /usr/share/nginx/errors;
+  internal;
+}
+
+{% endfor -%}
 }

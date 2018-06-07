@@ -36,6 +36,14 @@
   notify:
     - restart nginx
 
+- name: "upload custom error pages"
+  copy:
+    src: "{{ item }}"
+    dest: "/usr/share/nginx/errors/"
+  with_fileglob:
+    - "{{ nginx_error_pages }}"
+  when: nginx_error_pages | length > 0
+
 - name: "restart nginx"
   service:
     name: nginx
