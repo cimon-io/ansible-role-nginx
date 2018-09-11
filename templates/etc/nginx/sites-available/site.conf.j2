@@ -69,6 +69,10 @@ server {
   root {{ item.value.root }};
 {% endif %}
 
+{% for rule in item.value.rewrite | default([]) %}
+  rewrite {{ rule }};
+{% endfor %}
+
   include /etc/nginx/server_params;
 
 {% if item.key in nginx_letsencrypt_sites %}
