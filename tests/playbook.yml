@@ -1,5 +1,5 @@
 ---
-- hosts: cimon-ansible
+- hosts: all
   roles:
     - role: ansible-role-nginx
   vars_files:
