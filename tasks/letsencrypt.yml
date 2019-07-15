@@ -29,8 +29,8 @@
 - name: "set crontask - ssl renewal"
   cron:
     name: "update letsencrypt SSL"
-    hour: 5
-    minute: 15
-    weekday: 1
+    hour: '5'
+    minute: '15'
+    weekday: '1'
     job: "/opt/certbot/certbot-auto renew --agree-tos"
-  when: nginx_letsencrypt_sites
+  when: nginx_letsencrypt_sites|bool

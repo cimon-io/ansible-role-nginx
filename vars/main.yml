@@ -7,7 +7,8 @@ nginx_requirements:
   - openssl
 
 nginx_key: "https://nginx.org/keys/nginx_signing.key"
-nginx_repo: "deb http://nginx.org/packages/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} nginx"
+nginx_repo: "deb [arch=amd64] http://nginx.org/packages/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} nginx"
 nginx_apt_pin_priority: 550
 
 apt_cache_valid_time: 86400
+remote_package_retries: 5
