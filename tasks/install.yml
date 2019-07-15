@@ -1,20 +1,23 @@
 ---
 - name: "install software required for nginx"
   apt:
-    name: "{{ item }}"
+    name: "{{ nginx_requirements }}"
     state: present
     update_cache: true
     cache_valid_time: "{{ apt_cache_valid_time }}"
-  with_items: "{{ nginx_requirements }}"
+  retries: "{{ remote_package_retries }}"
+  register: apt_deps_result
+  until: apt_deps_result is succeeded
 
 - name: "add nginx repo key"
   apt_key:
     url: "{{ nginx_key }}"
 
 - name: "add nginx repository"
-  apt_repository:
-    repo: "{{ nginx_repo }}"
-    filename: "nginx"
+  template:
+    src: "etc/apt/sources.list.d/nginx.list.j2"
+    dest: "/etc/apt/sources.list.d/nginx.list"
+    owner: root
 
 - name: "pin nginx repository"
   template:
@@ -27,7 +30,10 @@
     name: "nginx={{ nginx_version }}*"
     state: present
     update_cache: true
-    cache_valid_time: "{{ apt_cache_valid_time }}"
+    cache_valid_time: 0
+  retries: "{{ remote_package_retries }}"
+  register: apt_result
+  until: apt_result is succeeded
 
 - name: "create sites directories"
   file:
@@ -45,11 +51,11 @@
     repo: "https://github.com/certbot/certbot.git"
     dest: /opt/certbot
     update: no
-  when: nginx_letsencrypt_sites
+  when: nginx_letsencrypt_sites|bool
 
 - name: "install requirements for certbot"
   shell: "./certbot-auto -n --os-packages-only"
   args:
     chdir: /opt/certbot
     executable: /bin/bash
-  when: nginx_letsencrypt_sites
+  when: nginx_letsencrypt_sites|bool
