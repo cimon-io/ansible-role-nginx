@@ -51,11 +51,11 @@
     repo: "https://github.com/certbot/certbot.git"
     dest: /opt/certbot
     update: no
-  when: nginx_letsencrypt_sites|bool
+  when: nginx_letsencrypt_sites | length > 0
 
 - name: "install requirements for certbot"
   shell: "./certbot-auto -n --os-packages-only"
   args:
     chdir: /opt/certbot
     executable: /bin/bash
-  when: nginx_letsencrypt_sites|bool
+  when: nginx_letsencrypt_sites | length > 0
