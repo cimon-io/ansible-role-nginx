@@ -2,8 +2,8 @@
 ansible_become: yes
 
 nginx_requirements:
-  - python-pycurl
-  - python-passlib
+  - python3-pycurl
+  - python3-passlib
   - openssl
 
 nginx_key: "https://nginx.org/keys/nginx_signing.key"
