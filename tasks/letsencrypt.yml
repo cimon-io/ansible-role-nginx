@@ -33,4 +33,3 @@
     minute: '15'
     weekday: '1'
     job: "/opt/certbot/certbot-auto renew --agree-tos"
-  when: nginx_letsencrypt_sites|bool

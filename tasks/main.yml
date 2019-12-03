@@ -13,6 +13,7 @@
 
 - name: "letsencrypt ssl configuration"
   import_tasks: letsencrypt.yml
+  when: nginx_letsencrypt_sites | length > 0
   tags: [nginx, nginx-config, nginx-ssl]
 
 - name: "configure nginx sites"
