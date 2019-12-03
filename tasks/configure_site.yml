@@ -53,7 +53,7 @@
 
 - name: "create list with disabled configs, pt.2"
   set_fact:
-    _unmanaged_configs: "{{ _config_paths | difference(nginx_sites.keys() | map('regex_replace', '(.*)', '/etc/nginx/sites-enabled/\\1.conf') | list ) }}"
+    _unmanaged_configs: "{{ _config_paths | difference(nginx_sites.keys() | map('regex_replace', '^(.*)$', '/etc/nginx/sites-enabled/\\1.conf') | list ) }}"
 
 - name: "remove old config links"
   file:
