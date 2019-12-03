@@ -14,8 +14,9 @@
     dest: "{{ nginx_ssl_path }}/{{ item.key }}.crt"
   notify:
     - restart nginx
-  when: (item.value.https | default(False)) and
-        (item.key not in nginx_letsencrypt_sites)
+  when:
+    - item.value.https | default(False)
+    - item.key not in nginx_letsencrypt_sites
   with_dict: "{{ nginx_sites }}"
 
 - name: "copy ssl private key"
@@ -24,6 +25,7 @@
     dest: "{{ nginx_ssl_path }}/{{ item.key }}.key"
   notify:
     - restart nginx
-  when: (item.value.https |  default(False)) and
-        (item.key not in nginx_letsencrypt_sites)
+  when:
+    - item.value.https | default(False)
+    - item.key not in nginx_letsencrypt_sites
   with_dict: "{{ nginx_sites }}"

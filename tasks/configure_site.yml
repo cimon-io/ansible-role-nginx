@@ -39,3 +39,24 @@
   notify:
     - reload nginx
   with_dict: "{{ nginx_sites }}"
+
+- name: "get current config links"
+  find:
+    paths: "/etc/nginx/sites-enabled/"
+    patterns: '*.conf'
+    file_type: "link"
+  register: _config_links
+
+- name: "create list with disabled configs, pt.1"
+  set_fact:
+    _config_paths: "{{ _config_links.files | map(attribute='path') | list }}"
+
+- name: "create list with disabled configs, pt.2"
+  set_fact:
+    _unmanaged_configs: "{{ _config_paths | difference(nginx_sites.keys() | map('regex_replace', '(.*)', '/etc/nginx/sites-enabled/\\1.conf') | list ) }}"
+
+- name: "remove old config links"
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items: "{{ _unmanaged_configs }}"
