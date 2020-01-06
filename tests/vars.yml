@@ -1,8 +1,10 @@
 ---
 nginx_auth_basic:
-  adminpanel:
-    user: admin
-    pass: admin
+  - name: adminpanel
+    passwords:
+      admin1: admin3
+      admin2: admin2
+      admin3: admin1
 
 nginx_sites:
   load-balancer:
