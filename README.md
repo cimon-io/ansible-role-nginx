@@ -27,16 +27,17 @@ For site configuration variables see `defaults/main.yml`. All sites parameters c
 ```yaml
 nginx_sites: {}             # Sites with parameters (see below)
 nginx_letsencrypt_sites: [] # List of `nginx_sites` key values for Let's Encrypt SSL
-nginx_auth_basic: {}        # User name and password for basic authentication
+nginx_auth_basic: []        # User name and password for basic authentication
 ```
 
 The variable `nginx_auth_basic` allows to limit access to resources by validating user name and password using the "HTTP Basic Authentication" protocol. The specified values are saved in the `.htpasswd` file at `etc/nginx`. Each record has the following format:
 
 ```yaml
 nginx_auth_basic:
-  authname:
-    user: "admin"   # A user name
-    pass: "admin"   # A user password
+  - name: authname
+    passwords:
+      admin1: pass1  # username:password
+      admin2: pass2
 ```
 
 For the `nginx_sites` items you need to set the configuration name and necessary site parameters for each specific `nginx_sites` key in the following format:
@@ -413,9 +414,9 @@ NGINX basic configurations differ depending on your goals. It can be used as a l
 
 ```yaml
 nginx_auth_basic:
-  adminpanel:
-    user: admin
-    pass: admin
+  - name: adminpanel
+    passwords:
+      admin: admin
 ```
 
 ###### Load-balancer

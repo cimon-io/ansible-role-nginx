@@ -3,7 +3,11 @@ nginx_version: "1.16"
 
 nginx_sites: {}
 nginx_letsencrypt_sites: []
-nginx_auth_basic: {}
+nginx_auth_basic: []
+# - name: adminpanel
+#   passwords:
+#     admin1: pass1
+#     admin2: pass2
 nginx_error_pages: ""
 #nginx_error_pages: "files/nginx/error_pages/*.html"
 

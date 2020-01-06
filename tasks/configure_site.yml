@@ -25,11 +25,10 @@
   with_dict: "{{ nginx_sites }}"
 
 - name: "generate auth file"
-  htpasswd:
-    name: "{{ item.value.user }}"
-    password: "{{ item.value.pass }}"
-    path: "/etc/nginx/{{ item.key }}.htpasswd"
-  with_dict: "{{ nginx_auth_basic }}"
+  template:
+    src: "etc/nginx/htpasswd.j2"
+    dest: "/etc/nginx/{{ item.name }}.htpasswd"
+  with_items: "{{ nginx_auth_basic }}"
 
 - name: "link the config"
   file:
