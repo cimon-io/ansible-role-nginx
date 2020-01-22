@@ -131,6 +131,8 @@ You are able to configure the following `location` parameters as well:
 - `uri` - a request URI with one of the possible modifiers at the beginning, if necessary (`[ = | ~ | ~* | ^~ ]`). Regular expressions are specified with the preceding `~*` modifier (for case-insensitive matching), or the `~` modifier (for case-sensitive matching). If the longest matching prefix location contains the `^~` modifier, regular expressions are not checked. The modifier `=` makes it possible to define an exact match of URI and location.
 - `root` - a root directory for NGINX requests.
 - `auth` - a string which enables validation of user name and password using the "HTTP Basic Authentication" protocol. Use a special value `off` to cancel the effect of a previous level directive.
+- `auth_request` - (string) enables authorization based on the result of a subrequest and sets the URI to which the subrequest will be sent.
+- `auth_request_set` - (list) sets the request variable to the given value after the authorization request completes. The value may contain variables from the authorization request, such as `$upstream_http_*`.
 - `limit_conn` - the maximum number of simultaneous active connections for a specific shared memory `zone`. Several groups can share the same zone. In this case, it is enough to specify the size only once. The zero `size` value means that there is no limit.
 - `limit_req` - sets a shared memory `zone` and a maximum `burst` size of requests. If the rate of incoming requests exceeds the specified value, their processing is delayed so that requests are processed with a given rate. Use an option `nodelay` if extra requests within the burst limit should not be delayed.
 - `autoindex` - enables or disables the directory listing output.
