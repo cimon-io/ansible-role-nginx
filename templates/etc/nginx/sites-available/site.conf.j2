@@ -49,13 +49,13 @@ server {
   ssl_certificate {{ nginx_ssl_path }}/{{ item.key }}.crt;
   ssl_certificate_key {{ nginx_ssl_path }}/{{ item.key }}.key;
 
-  ssl_session_timeout {{ nginx_ssl_session_timeout }};
-  ssl_session_cache {{ nginx_ssl_session_cache }};
-  ssl_session_tickets {{ nginx_ssl_session_tickets }};
+  ssl_session_timeout {{ item.value.ssl_session_timeout | default(nginx_ssl_session_timeout) }};
+  ssl_session_cache {{ item.value.ssl_session_cache | default(nginx_ssl_session_cache) }};
+  ssl_session_tickets {{ item.value.ssl_session_tickets | default(nginx_ssl_session_tickets) }};
 
-  ssl_protocols {{ nginx_ssl_protocols }};
-  ssl_ciphers {{ nginx_ssl_ciphers }};
-  ssl_prefer_server_ciphers {{ nginx_ssl_prefer_server_ciphers }};
+  ssl_protocols {{ item.value.ssl_protocols | default(nginx_ssl_protocols) }};
+  ssl_ciphers {{ item.value.ssl_ciphers | default(nginx_ssl_ciphers) }};
+  ssl_prefer_server_ciphers {{ item.value.ssl_prefer_server_ciphers | default(nginx_ssl_prefer_server_ciphers) }};
 {% else %}
   listen {{ item.value.http_listen_port | default(80) }};
 {% endif %}
@@ -67,6 +67,10 @@ server {
 
 {% if item.value.root | default(False) %}
   root {{ item.value.root }};
+{% endif %}
+
+{% if item.value.auth_request | default(False) %}
+  auth_request {{ item.value.auth_request }};
 {% endif %}
 
 {% for rule in item.value.rewrite | default([]) %}
@@ -85,6 +89,12 @@ server {
     auth_basic "Basic auth";
     auth_basic_user_file /etc/nginx/{{ location.auth }}.htpasswd;
 {% endif %}
+{% if location.auth_request | default(False) %}
+    auth_request {{ location.auth_request }};
+{% endif %}
+{% for x in location.auth_request_set | default([]) %}
+    auth_request_set {{ x }};
+{% endfor %}
 {% if location.rewrite | default(False) %}
     rewrite {{ location.rewrite }};
 {% endif %}
@@ -106,7 +116,9 @@ server {
     {{ opts }};
 {% endfor %}
 {% endif %}
-    try_files {{ location.try_files | default('$uri $uri/ =404')}};
+{% if location.try_files | default(True) %}
+    try_files {{ location.try_files | default('$uri $uri/ =404') }};
+{% endif %}
   }
 
 {% endfor -%}
@@ -114,10 +126,19 @@ server {
 {% for upstream in item.value.upstreams | default([]) %}
 {% for location in upstream.location %}
   location {{ location.uri }} {
+{% if location.internal | default(False) %}
+    internal;
+{% endif %}
 {% if location.auth | default(False) %}
     auth_basic "Basic auth";
     auth_basic_user_file /etc/nginx/{{ location.auth }}.htpasswd;
 {% endif %}
+{% if location.auth_request | default(False) %}
+    auth_request {{ location.auth_request }};
+{% endif %}
+{% for x in location.auth_request_set | default([]) %}
+    auth_request_set {{ x }};
+{% endfor %}
 {% if location.rewrite | default(False) %}
     rewrite {{ location.rewrite }};
 {% endif %}
@@ -139,7 +160,9 @@ server {
     {{ opts }};
 {% endfor %}
 {% endif %}
+{% if location.try_files | default(True) %}
     try_files {{ location.try_files | default('$uri @'+upstream.name) }};
+{% endif %}
   }
 
 {% endfor %}
@@ -157,11 +180,16 @@ server {
 {% endfor -%}
 
 {% for err in item.value.error_pages | default([]) %}
-error_page {{ err }} /custom_{{ err }}.html;
-location = /custom_{{ err }}.html {
-  root /usr/share/nginx/errors;
-  internal;
-}
+{% if err.page | default(False) %}
+  error_page {{ err.code }} {{ err.page }};
+{% else %}
+  error_page {{ err.code }} = @error{{ err.code }};
+  location @error{{ err.code }} {
+  {% for rules in err.rules | default([]) %}
+    {{ rules }};
+  {% endfor %}
+  }
+{% endif %}
 
 {% endfor -%}
 }
