@@ -1,5 +1,5 @@
 ---
-nginx_version: "1.16"
+nginx_version: "1.18"
 
 nginx_sites: {}
 nginx_letsencrypt_sites: []
