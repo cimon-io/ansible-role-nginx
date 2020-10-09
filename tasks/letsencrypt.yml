@@ -6,9 +6,8 @@
     state: directory
 
 - name: "get ssl"
-  shell: "./certbot-auto certonly -n --webroot -w {{ nginx_wellknown_path }} --domains {{ nginx_sites[item].server_name | join(',') }} --email admin@{{ nginx_sites[item].server_name[0] }} --agree-tos --expand --keep-until-expiring --allow-subset-of-names --cert-name {{ item }} --post-hook '/usr/sbin/nginx -s reload' 2>&1"
+  shell: "/usr/bin/certbot certonly -n --webroot -w {{ nginx_wellknown_path }} --domains {{ nginx_sites[item].server_name | join(',') }} --email admin@{{ nginx_sites[item].server_name[0] }} --agree-tos --expand --keep-until-expiring --allow-subset-of-names --cert-name {{ item }} --post-hook '/usr/sbin/nginx -s reload' 2>&1"
   args:
-    chdir: /opt/certbot
     executable: /bin/bash
   with_items: "{{ nginx_letsencrypt_sites }}"
 
@@ -32,4 +31,4 @@
     hour: '5'
     minute: '15'
     weekday: '1'
-    job: "/opt/certbot/certbot-auto renew --agree-tos"
+    job: "/usr/bin/certbot renew --agree-tos"

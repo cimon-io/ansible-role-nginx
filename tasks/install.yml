@@ -47,15 +47,12 @@
     - "/etc/nginx/sites-enabled"
 
 - name: "install certbot"
-  git:
-    repo: "https://github.com/certbot/certbot.git"
-    dest: /opt/certbot
-    update: no
+  apt:
+    name: "python3-certbot"
+    state: present
+    update_cache: false
+  retries: "{{ remote_package_retries }}"
+  register: apt_certbot_result
+  until: apt_certbot_result is succeeded
   when: nginx_letsencrypt_sites | length > 0
 
-- name: "install requirements for certbot"
-  shell: "./certbot-auto -n --os-packages-only"
-  args:
-    chdir: /opt/certbot
-    executable: /bin/bash
-  when: nginx_letsencrypt_sites | length > 0
