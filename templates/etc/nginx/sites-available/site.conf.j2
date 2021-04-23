@@ -108,6 +108,9 @@ server {
 {% if location.limit_conn | default({}) %}
     limit_conn {{ location.limit_conn.zone }} {{ location.limit_conn.size }};
 {% endif %}
+{% if location.add_header | default(False) %}
+    add_header {{ location.add_header }};
+{% endif %}
 {% if location.root | default(False) %}
     root {{ location.root }};
 {% endif %}
