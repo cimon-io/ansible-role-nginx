@@ -68,6 +68,9 @@ server {
 {% if item.value.root | default(False) %}
   root {{ item.value.root }};
 {% endif %}
+{% if item.value.index | default(False) %}
+  index {{ item.value.index }};
+{% endif %}
 
 {% if item.value.auth_request | default(False) %}
   auth_request {{ item.value.auth_request }};
